@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.korit.board.repository.UserMapper">
+    <resultMap id="userMap" type="com.korit.board.entity.User">
+        <id property="userId" column="user_id" />
+        <result property="email" column="email" />
+        <result property="password" column="password" />
+        <result property="name" column="name" />
+        <result property="nickname" column="nickname" />
+        <result property="enabled" column="enabled" />
+        <result property="profileUrl" column="profile_url" />
+        <result property="oauth2Id" column="oauth2_id" />
+        <result property="provider" column="provider" />
+        <result property="userPoint" column="user_point" />
+    </resultMap>
+
+    <insert id="saveUser" parameterType="com.korit.board.entity.User">
+        insert into user_tb
+        values(
+            0,
+            #{email},
+            #{password},
+            #{name},
+            #{nickname},
+            0,
+            <choose>
+                <when test='profileUrl==null or profileUrl.equals("")'>
+                    default,
+                </when>
+                <otherwise>
+                    #{profileUrl},
+                </otherwise>
+            </choose>
+            #{oauth2Id},
+            #{provider}
+        )
+    </insert>
+
+    <update id="updateEnabledToEmail">
+        update user_tb
+        set
+            enabled = 1
+        where
+            email = #{email}
+    </update>
+    <update id="updateProfileUrl" parameterType="com.korit.board.entity.User">
+        update user_tb
+        set
+            profile_url = #{profileUrl}
+        where
+            email = #{email}
+    </update>
+
+    <update id="updatePassword" parameterType="com.korit.board.entity.User">
+        update user_tb
+        set
+            password = #{password}
+        where
+            email = #{email}
+    </update>
+    <update id="updateOauth2IdAndProvider" parameterType="com.korit.board.entity.User">
+        update user_tb
+        set
+            oauth2_id = #{oauth2Id},
+            provider = #{provider}
+        where
+            email = #{email}
+    </update>
+
+    <select id="checkDuplicate"
+            parameterType="com.korit.board.entity.User"
+            resultType="integer">
+        select
+            (select
+                if(count(*) > 0, 1, 0)
+            from
+                user_tb
+            where
+                email = #{email}
+            )
+            + (select
+                if(count(*) > 0, 2, 0)
+            from
+                user_tb
+            where
+                nickname = #{nickname}
+            ) as result
+    </select>
+
+    <select id="findUserByEmail" resultMap="userMap">
+        select
+            ut.user_id,
+            ut.email,
+            ut.password,
+            ut.name,
+            ut.nickname,
+            ut.enabled,
+            ut.profile_url,
+            ut.oauth2_id,
+            ut.provider,
+            sum(pht.point_history_price) as user_point
+        from
+            user_tb ut
+            left outer join point_history_tb pht on(pht.email = ut.email)
+        where
+            ut.email = #{email}
+        group by
+            ut.user_id,
+            ut.email,
+            ut.password,
+            ut.name,
+            ut.nickname,
+            ut.enabled,
+            ut.profile_url,
+            ut.oauth2_id,
+            ut.provider
+
+    </select>
+    <select id="findUserByOauth2Id" resultType="com.korit.board.entity.User">
+        select
+            user_id,
+            email,
+            password,
+            name,
+            nickname,
+            enabled,
+            profile_url,
+            oauth2_id,
+            provider
+        from
+            user_tb
+        where
+            oauth2_id = #{oauth2Id}
+    </select>
+</mapper>

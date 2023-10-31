@@ -1,0 +1,13 @@
+SecurityContextHolder 안에 Authentication 에서 PrincipalUser 가져온다
+
+controller -> interfase(usermapper) -> mapper.xml -> service
+
+
+
+usestate 상태
+
+recoil - 전역 동기 상태
+
+react-query - 전역 비동기상태
+
+Gmail SMTP - 기기용 앱 비밀번호 litj hqgk btuv wwkp
